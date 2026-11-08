@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>geni.us oracle</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>main{margin:0 auto;max-width:860px}.row{display:flex;gap:10px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}.row div{flex:1}.row small{color:var(--mute)}</style>
+</head>
+<body>
+  <main>
+    <h1>🔮 Oracle: resolve markets</h1>
+    <p style="color:var(--mute)">Resolving marks the market in MongoDB Atlas, aggregates the winning positions and pays every winner in SOL from the treasury on Solana (batched transfers + memo).</p>
+    <p><input id="key" type="password" placeholder="admin key" /></p>
+    <div class="card" id="list"></div>
+    <pre id="out" style="margin-top:16px"></pre>
+  </main>
+  <script>
+    const list = document.getElementById('list');
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    async function load() {
+      const r = await (await fetch('/api/markets')).json();
+      list.innerHTML = r.markets.map((m) => `<div class="row"><div>${esc(m.question)}<br/><small>${esc(m._id)} · ${Math.round(m.pYes * 100)}% YES · ${m.status}${m.outcome ? ' ' + m.outcome : ''}</small></div>
+        ${m.status === 'open' ? `<button data-id="${esc(m._id)}" data-o="YES">Resolve YES</button><button class="ghost" data-id="${esc(m._id)}" data-o="NO">Resolve NO</button>` : ''}</div>`).join('');
+    }
+    list.onclick = async (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      b.disabled = true; b.textContent = 'Paying winners on Solana…';
+      const res = await fetch('/api/admin/resolve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: document.getElementById('key').value, marketId: b.dataset.id, outcome: b.dataset.o }) });
+      document.getElementById('out').textContent = JSON.stringify(await res.json(), null, 2);
+      load();
+    };
+    load();
+  </script>
+</body>
+</html>

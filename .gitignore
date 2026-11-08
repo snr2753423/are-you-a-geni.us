@@ -1,0 +1,9 @@
+node_modules
+.env
+.claude
+.ledger
+test-ledger
+.DS_Store
+video/out/*
+!video/out/.gitkeep
+!video/out/demo.mp4

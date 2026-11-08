@@ -1,0 +1,29 @@
+{
+  "name": "are-you-a-geni-us",
+  "version": "1.0.0",
+  "description": "are-you-a-geni.us — a prediction market where every bet is a Solana transaction and every market lives in MongoDB Atlas.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "wallet": "node scripts/setup-wallet.js",
+    "seed": "node scripts/seed.js",
+    "localnet": "solana-test-validator --reset --quiet --ledger .ledger",
+    "demo:prep": "node video/prep.js",
+    "demo:reset": "node scripts/reset-demo.js",
+    "dev:local": "node scripts/dev-local.js",
+    "demo:video": "node video/record.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@solana/web3.js": "^1.99.0",
+    "bs58": "^6.0.0",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.3",
+    "mongodb": "^6.22.0"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^10.4.3",
+    "playwright-core": "^1.65.0"
+  }
+}

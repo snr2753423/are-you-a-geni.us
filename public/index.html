@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>are-you-a-geni.us</title>
+  <meta name="description" content="Are you a genius? Prove it on-chain. A prediction market where every bet is a Solana transaction and every market lives in MongoDB Atlas." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="top">
+    <a class="logo" href="#/">are-you-a-<span class="g">geni</span><span class="us">.us</span><span class="q">?</span></a>
+    <nav>
+      <a href="#/" data-nav="markets">Markets</a>
+      <a href="#/leaderboard" data-nav="leaderboard">Genius IQ</a>
+      <a href="#/me" data-nav="me">My Bets</a>
+      <a href="#/under-the-hood" data-nav="under-the-hood">Under the hood</a>
+    </nav>
+    <div class="wallet">
+      <span class="pill sol" id="clusterPill" title="Solana cluster">◎ …</span>
+      <a id="walletAddr" class="mono" target="_blank" rel="noopener"></a>
+      <span id="walletBal" class="mono">… SOL</span>
+      <button id="fundBtn" class="ghost">Get test SOL</button>
+      <button id="phantomBtn" class="ghost">Connect Phantom</button>
+    </div>
+  </header>
+
+  <main id="view"></main>
+
+  <aside class="tape">
+    <div class="tape-h"><span class="dot"></span> LIVE TAPE <small id="tapeMode">change stream</small></div>
+    <div id="tape"></div>
+  </aside>
+
+  <div id="toast" class="toast"></div>
+
+  <footer>
+    Every bet is a real <b>Solana</b> transaction · markets live in <b>MongoDB Atlas</b> · served from <b>are-you-a-geni.us</b> (GoDaddy Registry .us)
+  </footer>
+
+  <script src="/vendor/web3.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

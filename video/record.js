@@ -1,6 +1,6 @@
 // Records the narrated demo video end-to-end: drives the real app in Chrome (Playwright), narrates with
 // macOS `say`, overlays captions in-page, and muxes everything into video/out/demo.mp4 with ffmpeg.
-// Every bet in the video is a live Solana devnet transaction settled in MongoDB.
+// Every bet in the video is a live Solana transaction (devnet or a local validator) settled in MongoDB.
 //   prerequisites: server running (npm start / npm run dev:local), treasury funded, `node video/prep.js` done
 //   usage: node video/record.js [http://localhost:3100]
 import 'dotenv/config';
@@ -75,15 +75,15 @@ async function cursorClick(page, selector) {
 
 let userBetSig = null;
 const scenes = [
-  { say: 'This is are-you-a-geni.us. The domain asks the question, and the app lets you answer it. It is a prediction market where you prove you are a genius by being right before everyone else. We registered the dot U S domain through GoDaddy Registry, so the name is the pitch.',
+  { say: 'This is are-you-a-geni.us. The domain asks the question, and the app lets you answer it. It’s a prediction market where you prove you’re a genius by being right before everyone else. We registered the dot U S domain through GoDaddy Registry, so the name is the pitch.',
     run: async (p) => { await p.setContent(card('', 'Are you a genius? Prove it on-chain.', badges)); } },
-  { say: 'Every market has live odds. Two technologies do all of the work. Solana is the money and the proof: every bet is a real Solana transaction. For this recording we run a local Solana validator, and the same code runs on devnet. MongoDB Atlas is the market brain: odds, settlement, history, search, and the leaderboard.',
+  { say: 'Two technologies do all of the work. Solana is the money and the proof: every bet is a real Solana transaction. For this recording we run a local Solana validator, and the same code runs on devnet. MongoDB Atlas is the market brain: odds, settlement, history, search, and the leaderboard.',
     run: async (p) => { await p.goto(BASE); await p.waitForSelector('.mcard'); await cap(p, 'both', 'Solana = money + proof · MongoDB Atlas = odds, settlement, history, search, leaderboard'); await sleep(5000); await p.mouse.wheel(0, 420); } },
-  { say: 'Discovery runs on Atlas Search. I will misspell snow, and fuzzy autocomplete still finds the Christmas market.',
+  { say: 'Discovery runs on Atlas Search. I’ll misspell snow, and fuzzy autocomplete still finds the Christmas market.',
     run: async (p) => { await p.mouse.wheel(0, -1000); await cap(p, 'mongo', 'Atlas Search: $search with fuzzy autocomplete, typo "snwo" still matches'); await p.click('#q'); await p.keyboard.type('snwo', { delay: 220 }); await sleep(1500); await p.fill('#q', ''); await sleep(400); } },
-  { say: 'No wallet install needed. The site creates a burner keypair in my browser, and the market treasury sends me test SOL in a confirmed Solana transaction. Phantom works too.',
+  { say: 'No wallet install needed. The site creates a burner keypair in my browser, and the market treasury sends me test SOL in a confirmed Solana transaction.',
     run: async (p) => { await cap(p, 'sol', 'Burner keypair in the browser, funded by a treasury transfer on Solana'); await cursorClick(p, '#fundBtn'); await p.waitForFunction(() => !document.querySelector('#walletBal').textContent.startsWith('0.000'), null, { timeout: 30000 }).catch(() => {}); } },
-  { say: 'Let us bet that the judges laugh at our domain pun. I pick YES, and point zero five SOL. The quote comes from an L M S R market maker whose state lives in Atlas.',
+  { say: 'Let’s bet that the judges laugh at our domain pun. I pick YES, and point zero five SOL. The quote comes from an L M S R market maker whose state lives in Atlas.',
     run: async (p) => { await p.goto(`${BASE}/#/m/judges-laugh`); await p.waitForSelector('#buy'); await cap(p, 'mongo', 'Odds = LMSR market maker, state stored in the markets collection'); await sleep(1200); await cursorClick(p, '.presets button[data-v="0.05"]'); } },
   { say: 'Step one: my browser signs a SOL transfer to the market treasury, plus a memo receipt. Step two: the server relays it and waits for Solana to confirm, in under a second, for a fraction of a cent. Step three: the server re-reads the confirmed transaction from the chain, verifies the transfer and the memo, and settles the trade in one multi-document ACID transaction in MongoDB Atlas. The trade I D is the Solana signature, so the same transaction can never be counted twice.',
     run: async (p) => {
@@ -93,16 +93,16 @@ const scenes = [
       userBetSig = await p.$eval('[data-step="chain"] a', (a) => a.href.split('/tx/')[1].split('?')[0]);
       const ms = await p.$eval('[data-step="chain"] a', (a) => a.textContent.split('·')[0].trim());
       await sleep(5500);
-      await cap(p, 'sol', `Confirmed on Solana devnet in ${ms}`);
+      await cap(p, 'sol', `Confirmed on Solana in ${ms}`);
       await sleep(7000);
       await cap(p, 'mongo', 'Atlas: market + trade + position + user updated in one ACID transaction · _id = tx signature');
     } },
-  { say: 'Every bet gets a receipt page that reads the transaction straight from the Solana RPC: the memo, the transfer to the treasury, and the program logs. Next to it is the exact MongoDB document that the transaction created.',
+  { say: 'Every bet gets a receipt page that reads the transaction straight from the Solana RPC: the memo and the transfer to the treasury. Next to it is the exact MongoDB document that the transaction created.',
     run: async (p) => {
       await p.goto(`${BASE}/#/tx/${userBetSig}`); await p.waitForSelector('.hood', { timeout: 15000 }).catch(() => {});
       await cap(p, 'both', 'Left: read live from Solana · Right: the Atlas document whose _id is that signature');
     } },
-  { say: 'And here is the same transaction on the public Solana Explorer, with our memo, geni dot u s, judges laugh, YES, on-chain for anyone to verify.',
+  { say: 'And here’s the same transaction on the public Solana Explorer, with our memo, geni dot u s, judges laugh, YES, on-chain for anyone to verify.',
     run: async (p) => {
       const cfg = await api('/api/config');
       await p.goto(`https://explorer.solana.com/tx/${userBetSig}${cfg.explorerQuery}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
@@ -119,7 +119,7 @@ const scenes = [
       await sleep(800); botBet('judges-laugh', 'NO', 0.03).catch((e) => console.log('bot bet failed', e.message));
       await sleep(4000); await cap(p, 'mongo', 'Price history: price_ticks time series collection, bucketed with $dateTrunc');
     } },
-  { say: 'Being rich does not make you a genius. Genius I Q rewards calling it early: buying cheap, and being right. It is computed live by an Atlas aggregation pipeline, with lookup, group, and set window fields to rank everyone.',
+  { say: 'Being rich doesn’t make you a genius. Genius I Q rewards calling it early: buying cheap, and being right. It’s computed live by an Atlas aggregation pipeline, with lookup, group, and set window fields to rank everyone.',
     run: async (p) => { await p.goto(`${BASE}/#/leaderboard`); await p.waitForSelector('table'); await cap(p, 'mongo', 'Genius IQ: $lookup → $group → $setWindowFields($rank), live on Atlas'); await sleep(6000); await p.mouse.wheel(0, 700); await sleep(2000); await p.mouse.wheel(0, 700); } },
   { say: 'When a market resolves, the oracle marks it in Atlas, aggregates the winning positions, and pays every winner in SOL on Solana in one batched transaction.',
     run: async (p) => {
@@ -129,22 +129,29 @@ const scenes = [
       await p.waitForFunction(() => document.getElementById('out').textContent.includes('signatures'), null, { timeout: 60000 }).catch(() => {});
       await sleep(1500);
     } },
-  { say: 'My YES shares just paid out. Here is the payout transaction on Solana, and my Genius I Q.',
+  { say: 'My YES shares just paid out. Here’s the payout transaction on Solana, and my Genius I Q.',
     run: async (p) => { await p.goto(`${BASE}/#/me`); await p.waitForSelector('.me-hero'); await cap(p, 'sol', 'Winnings paid in SOL: payout tx linked from your position'); await sleep(2500); await p.goto(`${BASE}/#/m/judges-laugh`); await sleep(1500); } },
-  { say: 'Take away Solana, and nobody can bet: there is no money, and no proof. Take away MongoDB Atlas, and there is no market: no odds, no settlement, no history, and no leaderboard. Both are load bearing.',
+  { say: 'Take away Solana, and nobody can bet: there’s no money, and no proof. Take away MongoDB Atlas, and there’s no market: no odds, no settlement, no history, and no leaderboard. Both are load bearing.',
     run: async (p) => { await p.goto(`${BASE}/#/under-the-hood`); await p.waitForSelector('.hood'); await cap(p, 'both', 'Both integrations are load-bearing. Remove either and the product stops existing.'); await sleep(7000); await p.mouse.wheel(0, 500); } },
   { say: 'are-you-a-geni.us. Are you? Prove it on-chain.',
     run: async (p) => { await p.setContent(card('', 'Are you? Prove it on-chain.', `${badges}<p style="font-size:24px;margin-top:40px">github.com · Devpost · are-you-a-geni.us</p>`)); } },
 ];
 
-// 1) narration audio
+// 1) narration audio. Per scene, use a pre-recorded clip from video/voice/ if one exists
+//    (s00.wav, s01.m4a, ... from `video/tts.py` or your own voice), else fall back to macOS `say`.
+//    Scene timing stretches to each clip's length, so any voice stays in sync.
+const VOICE_DIR = new URL('./voice/', import.meta.url).pathname;
+fs.writeFileSync(`${OUT}narration.json`, JSON.stringify(scenes.map((s, i) => ({ id: `s${String(i).padStart(2, '0')}`, text: s.say })), null, 2));
+if (process.argv.includes('--export-script')) { console.log(`wrote ${OUT}narration.json`); process.exit(0); }
 const clips = scenes.map((s, i) => {
-  const f = `${AUDIO}s${String(i).padStart(2, '0')}.aiff`;
-  execFileSync('say', ['-v', VOICE, '-r', '182', '-o', f, s.say]);
+  const id = `s${String(i).padStart(2, '0')}`;
+  const own = ['wav', 'm4a', 'mp3', 'aiff', 'flac'].map((ext) => `${VOICE_DIR}${id}.${ext}`).find((f) => fs.existsSync(f));
+  const f = own || `${AUDIO}${id}.aiff`;
+  if (!own) execFileSync('say', ['-v', VOICE, '-r', '182', '-o', f, s.say]);
   const dur = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString());
-  return { f, dur };
+  return { f, dur, source: own ? 'clip' : 'say' };
 });
-console.log(`narration: ${clips.reduce((a, c) => a + c.dur, 0).toFixed(1)}s across ${clips.length} scenes`);
+console.log(`narration: ${clips.reduce((a, c) => a + c.dur, 0).toFixed(1)}s across ${clips.length} scenes (${clips.filter((c) => c.source === 'clip').length} pre-recorded clips, ${clips.filter((c) => c.source === 'say').length} via say)`);
 
 // 2) drive the browser while recording
 // LocalNetworkAccess checks off so the public Solana Explorer can read a local validator's RPC
@@ -165,7 +172,7 @@ for (let i = 0; i < scenes.length; i++) {
   try { await scenes[i].run(page); } catch (e) { console.log(`  scene ${i} error: ${e.message.split('\n')[0]}`); }
   const left = minEnd - Date.now(); if (left > 0) await sleep(left);
 }
-await sleep(1500);
+await sleep(400);
 const total = (Date.now() - t0) / 1000;
 const raw = await page.video().path();
 await ctx.close(); await browser.close();
@@ -174,7 +181,7 @@ await ctx.close(); await browser.close();
 const args = ['-y', '-i', raw];
 clips.forEach((c) => args.push('-i', c.f));
 const delays = clips.map((c, i) => `[${i + 1}:a]adelay=${Math.round(marks[i] * 1000)}|${Math.round(marks[i] * 1000)}[a${i}]`).join(';');
-const mix = `${clips.map((_, i) => `[a${i}]`).join('')}amix=inputs=${clips.length}:normalize=0,apad[aout]`;
+const mix = `${clips.map((_, i) => `[a${i}]`).join('')}amix=inputs=${clips.length}:normalize=0,loudnorm=I=-16:TP=-1.5,apad[aout]`;
 args.push('-filter_complex', `${delays};${mix}`, '-map', '0:v', '-map', '[aout]', '-t', String(total),
   '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-r', '30', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', `${OUT}demo.mp4`);
 execFileSync('ffmpeg', args, { stdio: 'inherit' });

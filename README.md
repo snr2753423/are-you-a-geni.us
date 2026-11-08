@@ -83,8 +83,12 @@ It's a long-running Node server (change streams + SSE), so use Render, Railway o
 
 ```bash
 node video/prep.js http://localhost:3100     # bot traders place real Solana bets, 2 markets resolve + pay out
-node video/record.js http://localhost:3100   # drives Chrome, narrates with `say`, writes video/out/demo.mp4
+node video/record.js --export-script         # writes video/out/narration.json
+python video/tts.py af_heart 1.18            # Kokoro neural TTS -> video/voice/s00.wav … (see header for setup)
+node video/record.js http://localhost:3100   # drives Chrome, uses video/voice/* clips (falls back to `say`), writes video/out/demo.mp4
 ```
+
+To narrate it yourself, drop your own per-scene clips into `video/voice/` (`s00.m4a` …) and rerun the last command. Scene timing follows your clips. See [`video/SCRIPT.md`](video/SCRIPT.md).
 
 ## Stack
 

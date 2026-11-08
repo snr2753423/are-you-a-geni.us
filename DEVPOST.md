@@ -90,7 +90,7 @@ A Node/Express server, a vanilla JS front end, **MongoDB Atlas** as the market e
 
 Upload the images in [`docs/`](docs/) in order (title, markets, bet tracker, receipt + Atlas doc, Solana Explorer, live update, Genius IQ pipeline, payout, under the hood).
 
-## Demo video (2:49)
+## Demo video (2:54)
 
 Recorded with `video/record.js`, which drives the real app in Chrome. The full narration is in [`video/SCRIPT.md`](video/SCRIPT.md). Beats:
 

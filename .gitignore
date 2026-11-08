@@ -8,3 +8,4 @@ video/out/*
 !video/out/.gitkeep
 !video/out/demo.mp4
 video/voice/
+deploy/

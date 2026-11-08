@@ -74,10 +74,14 @@ docker run -d -p 27027:27017 mongodb/mongodb-atlas-local:8   # MONGODB_URI=mongo
 
 ## Deploy on the domain
 
-It's a long-running Node server (change streams + SSE), so use Render, Railway or Fly rather than serverless.
-1. Create a Web Service from this repo. Build command `npm install`, start command `npm start`. Add every `.env` value.
-2. In Atlas → Network Access, allow the host's IPs (or `0.0.0.0/0` for the hackathon).
-3. Add the custom domain `are-you-a-geni.us` on the host, then create the A/CNAME records it shows at your registrar. HTTPS is automatic.
+It's a long-running Node server (change streams + SSE), so it needs a real host, not serverless. `render.yaml` makes Render a one-click deploy.
+
+1. **Atlas:** create a free M0 cluster, add a database user, and allow `0.0.0.0/0` under Network Access (Render's IPs aren't fixed). Copy the `mongodb+srv://` URI.
+2. **Treasury:** fund the address from `npm run wallet` with devnet SOL at https://faucet.solana.com (signing in with GitHub skips the captcha).
+3. **Render:** New → Blueprint → this repo. Paste `MONGODB_URI`, `TREASURY_SECRET_KEY` (from your `.env`) and an `ADMIN_KEY`. It seeds the markets and creates the Atlas Search index on first boot.
+4. **Domain:** Render → Settings → Custom Domains → add `are-you-a-geni.us` and `www.are-you-a-geni.us`. At your registrar (GoDaddy DNS), set the apex `A` record and the `www` `CNAME` to the values Render shows. HTTPS is issued automatically.
+
+Render's free plan sleeps after 15 idle minutes (the first request then takes ~1 min), so open the site before judging or use the Starter plan.
 
 ## Re-record the demo video
 

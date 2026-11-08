@@ -1,0 +1,28 @@
+# One-click deploy: Render dashboard -> New -> Blueprint -> pick this repo.
+# Secrets marked `sync: false` are entered in the dashboard (never committed).
+services:
+  - type: web
+    name: are-you-a-geni-us
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: npm run start:prod
+    healthCheckPath: /api/config
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: MONGODB_URI          # Atlas -> Connect -> Drivers (mongodb+srv://...)
+        sync: false
+      - key: TREASURY_SECRET_KEY  # from your local .env (npm run wallet)
+        sync: false
+      - key: ADMIN_KEY            # protects /admin.html (resolving markets)
+        sync: false
+      - key: DB_NAME
+        value: geni_us
+      - key: SOLANA_RPC
+        value: https://api.devnet.solana.com
+      - key: LMSR_B
+        value: "0.2"
+      - key: FUND_SOL
+        value: "0.05"

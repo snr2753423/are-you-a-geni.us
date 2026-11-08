@@ -74,7 +74,7 @@ docker run -d -p 27027:27017 mongodb/mongodb-atlas-local:8   # MONGODB_URI=mongo
 
 ## Deploy on the domain
 
-It's a long-running Node server (change streams + SSE), so it needs a real host, not serverless. `render.yaml` makes Render a one-click deploy.
+It's a long-running Node server (change streams + SSE), so it needs a real host, not serverless. `render.yaml` makes Render a one-click deploy. **Detailed click-by-click guide: [`DEPLOY.md`](DEPLOY.md).**
 
 1. **Atlas:** create a free M0 cluster, add a database user, and allow `0.0.0.0/0` under Network Access (Render's IPs aren't fixed). Copy the `mongodb+srv://` URI.
 2. **Treasury:** fund the address from `npm run wallet` with devnet SOL at https://faucet.solana.com (signing in with GitHub skips the captcha).

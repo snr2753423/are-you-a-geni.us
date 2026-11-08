@@ -53,12 +53,20 @@ let lamports = 0;
 async function refreshBalance() {
   try { lamports = (await api(`/api/balance/${walletStr()}`)).lamports; $('#walletBal').textContent = `${sol(lamports, 3)} SOL`; } catch { /* rpc hiccup */ }
 }
+// No free SOL left in the treasury: send people to the public faucet with their address copied
+function selfFund() {
+  const addr = walletStr();
+  try { navigator.clipboard.writeText(addr); } catch { /* clipboard blocked */ }
+  toast('Free SOL faucet is empty. Your wallet address is copied: paste it at faucet.solana.com (devnet), or connect Phantom on devnet.', 8000);
+  window.open('https://faucet.solana.com', '_blank', 'noopener');
+}
 $('#fundBtn').onclick = async () => {
+  if (!cfg.faucetAvailable) { selfFund(); return; }
   const b = $('#fundBtn'); b.disabled = true; b.textContent = 'Funding…';
   try {
     const r = await api('/api/fund', { wallet: walletStr() });
     toast(r.skipped ? 'You already have test SOL. Go be a genius.' : `+${sol(r.funded || 0, 2)} SOL from the treasury, confirmed on Solana`);
-  } catch (e) { toast(`Faucet: ${e.message}`); }
+  } catch (e) { if (/empty/.test(e.message)) { cfg.faucetAvailable = false; selfFund(); } else toast(`Faucet: ${e.message}`); }
   b.disabled = false; b.textContent = 'Get test SOL';
   refreshBalance();
 };
@@ -242,7 +250,7 @@ async function renderMarket(id) {
       refreshBalance();
     } catch (e) {
       panel.querySelectorAll('.step.run').forEach((s) => s.classList.replace('run', 'err'));
-      toast(/insufficient|debit|0x1|no record of a prior credit/i.test(e.message) ? 'Not enough devnet SOL. Hit “Get test SOL”.' : e.message, 5000);
+      if (/insufficient|debit|0x1|no record of a prior credit/i.test(e.message)) { if (cfg.faucetAvailable) toast('Not enough devnet SOL. Hit “Get test SOL”.', 5000); else selfFund(); } else toast(e.message, 5000);
     }
     b.disabled = false; b.textContent = `Bet ${side}`;
   };
@@ -370,6 +378,7 @@ async function startTape() {
 (async () => {
   cfg = await api('/api/config');
   explorerQ = cfg.explorerQuery;
+  if (cfg.demoVideo) $('#demoLink').href = cfg.demoVideo;
   $('#clusterPill').textContent = `◎ ${cfg.cluster}`;
   renderWallet();
   refreshBalance();

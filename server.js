@@ -251,7 +251,13 @@ const wrap = (fn) => (req, res) => fn(req, res).catch((e) => {
   res.status(e.status || 400).json({ error: e.message });
 });
 
+// Cached treasury balance: decides whether the free burner faucet is offered
+let treasuryLamports = 0;
+const refreshTreasury = () => connection.getBalance(treasury.publicKey).then((b) => { treasuryLamports = b; }).catch(() => {});
+refreshTreasury(); setInterval(refreshTreasury, 60000);
+
 app.get('/api/config', (_req, res) => res.json({
+  faucetAvailable: treasuryLamports >= FUND_LAMPORTS * 2, demoVideo: 'https://github.com/snr2753423/are-you-a-geni.us/blob/main/video/out/demo.mp4',
   treasury: treasury.publicKey.toBase58(), rpc: SOLANA_RPC, cluster: CLUSTER, explorerQuery: EXPLORER_QUERY, memoPrefix: MEMO_PREFIX,
   memoProgram: MEMO_PROGRAM_ID.toBase58(), minBet: MIN_BET, maxBet: MAX_BET, features,
 }));
@@ -370,6 +376,8 @@ app.post('/api/fund', wrap(async (req, res) => {
   const pk = new PublicKey(wallet);
   const bal = await connection.getBalance(pk);
   if (bal >= FUND_LAMPORTS / 2) return res.json({ skipped: true, lamports: bal });
+  await refreshTreasury();
+  if (treasuryLamports < FUND_LAMPORTS * 2) throw Object.assign(new Error('faucet is empty'), { status: 503 });
   const recent = await col.fundings.countDocuments({ $or: [{ ip: req.ip }, { wallet }], createdAt: { $gt: new Date(Date.now() - 3600e3) } });
   if (recent >= 5) throw Object.assign(new Error('faucet limit reached, try again later'), { status: 429 });
   const tx = new Transaction().add(
